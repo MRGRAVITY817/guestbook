@@ -11,3 +11,8 @@
 - `-- :name get-messages :? :*`
   - `:?` means that query does a select.
   - `:*` means that query returns multiple rows.
+
+## Testing
+
+- Running `lein test` will read configs from `test-config.edn`
+- You can run test in _watch-mode_ with `lein test-refresh` command.
