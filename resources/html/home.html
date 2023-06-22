@@ -25,19 +25,30 @@
       <!-- Input Form -->
       <div class="columns">
         <div class="column">
-          <form action="/message" method="POST">
+          <form method="POST" action="/message">
+
             {% csrf-field %}
             <div class="field">
               <label for="name" class="label">
                 Name
               </label>
+              {% if errors.name %}
+              <div class="notification is-danger">
+                {{errors.name|join}}
+              </div>
+              {% endif %}
               <input type="text" class="input" name="name" value="{{name}}">
-            </div>
 
+            </div>
             <div class="field">
               <label for="name" class="message">
                 Message
               </label>
+              {% if errors.message %}
+              <div class="notification is-danger">
+                {{errors.message|join}}
+              </div>
+              {% endif %}
               <textarea name="message" class="textarea">{{message}}</textarea>
             </div>
 
