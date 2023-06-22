@@ -16,3 +16,14 @@
 
 - Running `lein test` will read configs from `test-config.edn`
 - You can run test in _watch-mode_ with `lein test-refresh` command.
+
+## Running Standalone
+
+```bash
+# First, package the project into runnable JAR file
+$ lein uberjar
+
+# Then run with java cli, using database url
+$ export DATABASE_URL="jdbc:h2:./guestbook_dev.db"
+$ java -jar target/uberjar/guestbook.jar
+```
