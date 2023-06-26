@@ -27,3 +27,11 @@ $ lein uberjar
 $ export DATABASE_URL="jdbc:h2:./guestbook_dev.db"
 $ java -jar target/uberjar/guestbook.jar
 ```
+
+## Adding dev dependency
+
+Add `:scope "provided"`
+
+```edn
+[org.clojure/clojurescript "1.10.764" :scope "provided"]
+```
