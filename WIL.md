@@ -35,3 +35,12 @@ Add `:scope "provided"`
 ```edn
 [org.clojure/clojurescript "1.10.764" :scope "provided"]
 ```
+
+## Build ClojureScript
+
+```bash
+# Build cljs
+$ lein cljsbuild once
+# Build cljs automatically when file changes
+$ lein cljsbuild auto
+```
