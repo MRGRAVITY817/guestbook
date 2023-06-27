@@ -23,7 +23,7 @@
 (def message-schema [[:name st/required st/string]
                      [:message st/required st/string
                       {:message "message must contain at least 10 characters"
-                       :validate #(>= (count %) 10)}]])
+                       :validate (fn [msg] (>= (count msg) 10))}]])
 
 (defn validate-message [params]
   ;; first element of st/validate returns nil when data is valid
@@ -31,13 +31,13 @@
 
 (defn save-message! [{:keys [params]}]
   (if-let [errors (validate-message params)]
-    ;; If form input is invalid, show error message via flash.
-    (-> (response/found "/")
-        (assoc :flash (assoc params :errors errors)))
-    ;; Else, save the message in database.
-    (do
+    (response/bad-request {:errors errors})
+    (try
       (db/save-message! params)
-      (response/found "/"))))
+      (response/ok {:status :ok})
+      (catch Exception _e
+        (response/internal-server-error
+         {:errors {:server-error ["Failed to save message!"]}})))))
 
 (defn home-routes []
   [""
