@@ -12,10 +12,7 @@
 (defn home-page [{:keys [flash] :as request}]
   (layout/render
    request
-   "home.html"
-   (merge
-    {:messages (db/get-messages)}
-    (select-keys flash [:name :message :errors]))))
+   "home.html"))
 
 (defn about-page [request]
   (layout/render request "about.html"))
@@ -30,11 +27,15 @@
         (response/internal-server-error
          {:errors {:server-error ["Failed to save message!"]}})))))
 
+(defn message-list [_]
+  (response/ok {:messages (vec (db/get-messages))}))
+
 (defn home-routes []
   [""
    {:middleware [middleware/wrap-csrf
                  middleware/wrap-formats]}
    ["/" {:get home-page}]
    ["/about" {:get about-page}]
-   ["/message" {:post save-message!}]])
+   ["/message" {:post save-message!}]
+   ["/messages" {:get message-list}]])
 

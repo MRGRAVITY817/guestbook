@@ -56,8 +56,9 @@
                 :optimizations :none
                 :source-map true
                 :pretty-print true}}}}
+
   :clean-targets
-  ^{:project false}
+  ^{:protect false}
   [:target-path
    [:cljsbuild :builds :app :compiler :output-dir]
    [:cljsbuild :builds :app :compiler :output-to]]
