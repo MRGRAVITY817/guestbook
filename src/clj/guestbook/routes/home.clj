@@ -2,8 +2,9 @@
   (:require
    [guestbook.layout :as layout]
    [guestbook.db.core :as db]
-   [clojure.java.io :as io]
    [guestbook.middleware :as middleware]
+   [guestbook.validation :refer [validate-message]]
+   [clojure.java.io :as io]
    [struct.core :as st]
    [ring.util.response]
    [ring.util.http-response :as response]))
@@ -18,16 +19,6 @@
 
 (defn about-page [request]
   (layout/render request "about.html"))
-
-;; form validation using `Struct` library (it's like zod in Node.js)
-(def message-schema [[:name st/required st/string]
-                     [:message st/required st/string
-                      {:message "message must contain at least 10 characters"
-                       :validate (fn [msg] (>= (count msg) 10))}]])
-
-(defn validate-message [params]
-  ;; first element of st/validate returns nil when data is valid
-  (first (st/validate params message-schema)))
 
 (defn save-message! [{:keys [params]}]
   (if-let [errors (validate-message params)]

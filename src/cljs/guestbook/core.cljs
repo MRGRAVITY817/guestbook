@@ -3,24 +3,27 @@
    [reagent.core :as r]
    [reagent.dom :as dom]
    [ajax.core :refer [GET POST]]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [guestbook.validation :refer [validate-message]]))
 
 (defn send-message!
   "Send form values to server (name and message)"
   [fields errors]
-  (POST "/message"
-    {:format :json
-     :headers {;; Transit will auto convert Clojure data structures 
+  (if-let [validation-errors (validate-message @fields)]
+    (reset! errors validation-errors)
+    (POST "/message"
+      {:format :json
+       :headers {;; Transit will auto convert Clojure data structures 
                ;; into HTML friendly string
-               "Accept" "application/transit+json"
-               "x-csrf-token" (.-value (.getElementById js/document "token"))}
-     :params @fields
-     :handler       (fn [r]
-                      (.log js/console (str "response:" r))
-                      (reset! errors nil))
-     :error-handler (fn [e]
-                      (.error js/console (str "error:" e))
-                      (reset! errors (-> e :response :errors)))}))
+                 "Accept" "application/transit+json"
+                 "x-csrf-token" (.-value (.getElementById js/document "token"))}
+       :params @fields
+       :handler       (fn [r]
+                        (.log js/console (str "response:" r))
+                        (reset! errors nil))
+       :error-handler (fn [e]
+                        (.error js/console (str "error:" e))
+                        (reset! errors (-> e :response :errors)))})))
 
 (defn errors-component [errors id]
   (when-let [error (id @errors)]
