@@ -2,9 +2,7 @@
   (:require
    [guestbook.layout :as layout]
    [guestbook.middleware :as middleware]
-   [guestbook.messages :as msg]
-   [ring.util.response]
-   [ring.util.http-response :as response]))
+   [ring.util.response]))
 
 (defn home-page [request]
   (layout/render
@@ -14,31 +12,10 @@
 (defn about-page [request]
   (layout/render request "about.html"))
 
-(defn save-message! [{:keys [params]}]
-  (try
-    (msg/save-message! params)
-    ;; If success
-    (response/ok {:status :ok})
-    ;; If failed
-    (catch Exception e
-      (let [{id     :guestbook/error-id
-             errors :errors} (ex-data e)]
-        (case id
-          :validation
-          (response/bad-request {:errors errors})
-            ;; else
-          (response/internal-server-error
-           {:errors {:server-error ["Failed to save message!"]}}))))))
-
-(defn message-list [_]
-  (response/ok (msg/message-list)))
-
 (defn home-routes []
   [""
    {:middleware [middleware/wrap-csrf
                  middleware/wrap-formats]}
    ["/" {:get home-page}]
-   ["/about" {:get about-page}]
-   ["/message" {:post save-message!}]
-   ["/messages" {:get message-list}]])
+   ["/about" {:get about-page}]])
 
