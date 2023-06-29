@@ -7,14 +7,14 @@
    [clojure.string :as string]
    [guestbook.validation :refer [validate-message]]))
 
-;; Create Reframe event, which contains info about 
+;; Register Reframe event, which contains info about 
 ;; whether messages are being loaded or not.
 (rf/reg-event-fx
  :app/initialize
  (fn [_ _]
    {:db {:messages/loading? true}}))
 
-;; Create subscription so that other function components can
+;; Register subscription so that other function components can
 ;; subscribe to :messages/loading? event.
 (rf/reg-sub
  :messages/loading?
@@ -71,7 +71,6 @@
                         (reset! errors (-> e :response :errors)))})))
 
 (defn message-list [messages]
-  (println messages)
   [:ul.messages
    (for [{:keys [timestamp message name]} @messages]
      ^{:key timestamp}

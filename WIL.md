@@ -43,4 +43,25 @@ Add `:scope "provided"`
 $ lein cljsbuild once
 # Build cljs automatically when file changes
 $ lein cljsbuild auto
+# Clean the distribution
+$ lein clean
 ```
+
+## Regeant (React.JS in Clojure)
+
+- Can compose DOM tree with function components.
+- Has built-in `atom` for managing states.
+  - When we use atom for read-only purpose, we can conjoin `@`
+    - (ex) `let [fields (r/atom {})]` -> `:value (:name @fields)`
+
+## Reframe (Event Handler)
+
+- Enables event-driven data management with Regeant.
+
+### Features
+
+- `rf/reg-event-fx`: Register(create)s new event
+- `rf/reg-event-db`: Register db only event
+- `rf/dispatch`: Add event into event-queue
+- `rf/reg-sub`: Registers new subscription to an event
+- `rf/subscribe`: Get reactive-value from subscription
