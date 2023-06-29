@@ -116,8 +116,6 @@
 
 (defn home []
   (let [messages (rf/subscribe [:messages/list])] ;; Local state
-    (rf/dispatch [:app/initialize]) ;; Put event in queue
-    (get-messages)
     (fn []
       [:div.content>div.columns.is-centered>div.column.is-two-thirds
        (if @(rf/subscribe [:messages/loading?])
@@ -128,6 +126,18 @@
            [message-list messages]]
           [:div.columns>div.column
            [message-form]]])])))
+
+(defn ^:dev/after-load mount-components []
+  (rf/clear-subscription-cache!)
+  (.log js/console "Mounting Components...")
+  (dom/render [#'home] (.getElementById js/document "content"))
+  (.log js/console "Components Mounted!"))
+
+(defn init! []
+  (.log js/console "Initializing App...")
+  (rf/dispatch [:app/initialize]) ;; Put event in queue
+  (get-messages)
+  (mount-components))
 
 (dom/render
  [home]
