@@ -2,6 +2,7 @@
   (:require
    [reagent.core :as r]
    [reagent.dom :as dom]
+   [re-frame.core :as rf]
    [ajax.core :refer [GET POST]]
    [clojure.string :as string]
    [guestbook.validation :refer [validate-message]]))
@@ -78,16 +79,33 @@
          :on-click #(send-message! fields errors messages)
          :value "comment"}]])))
 
+;; Create Reframe event, which contains info about 
+;; whether messages are being loaded or not.
+(rf/reg-event-fx
+ :app/initialize
+ (fn [_ _]
+   {:db {:messages/loading? true}}))
+
+;; Create subscription so that other function components can
+;; subscribe to :messages/loading? event.
+(rf/reg-sub
+ :messages/loading?
+ (fn [db _]
+   (:messages/loading? db)))
+
 (defn home []
   (let [messages (r/atom nil)]
+    (rf/dispatch [:app/initialize])
     (get-messages messages)
     (fn []
-      [:div.content>div.columns.is-centered>div.column.is-two-thirds
-       [:div.columns>div.column
-        [:h3 "Messages"]
-        [message-list messages]]
-       [:div.columns>div.column
-        [message-form messages]]])))
+      (if @(rf/subscribe [:messages/loading?])
+        [:div>div.row>div.span12>h3 "Loading Messages..."]
+        [:div.content>div.columns.is-centered>div.column.is-two-thirds
+         [:div.columns>div.column
+          [:h3 "Messages"]
+          [message-list messages]]
+         [:div.columns>div.column
+          [message-form messages]]]))))
 
 (dom/render
  [home]
