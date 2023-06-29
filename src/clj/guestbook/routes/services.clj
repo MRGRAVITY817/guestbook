@@ -1,7 +1,6 @@
 (ns guestbook.routes.services
   (:require
    [guestbook.messages :as msg]
-   [guestbook.middleware :as middleware]
    [guestbook.middleware.formats :as formats]
    [ring.util.http-response :as response]
    [reitit.swagger :as swagger]
@@ -51,10 +50,10 @@
          [{:id        pos-int? ;; Predicates for swaggers
            :name      string?
            :message   string?
-           :timestamp inst?}]}}}}
-     :handler
-     (fn [_]
-       (response/ok (msg/message-list)))}]
+           :timestamp inst?}]}}}
+      :handler
+      (fn [_]
+        (response/ok (msg/message-list)))}}]
    ["/message"
     {:post
      {:parameters
@@ -68,24 +67,24 @@
        400
        {:body map?}
        500
-       {:errors map?}}}
+       {:errors map?}}
 
-     :handler
-     (fn [{{params :body} :parameters}]
-       (try
-         (msg/save-message! params)
+      :handler
+      (fn [{{params :body} :parameters}]
+        (try
+          (msg/save-message! params)
          ;; Success
-         (response/ok {:status :ok})
+          (response/ok {:status :ok})
          ;; Failed
-         (catch Exception e
-           (let [{id     :guestbook/error-id
-                  errors :errors} (ex-data e)]
-             (case id
-               :validation
-               (response/bad-request {:errors errors})
+          (catch Exception e
+            (let [{id     :guestbook/error-id
+                   errors :errors} (ex-data e)]
+              (case id
+                :validation
+                (response/bad-request {:errors errors})
                ;; else
-               (response/internal-server-error
-                {:errors {:server-error ["Failed to save message!"]}}))))))}]])
+                (response/internal-server-error
+                 {:errors {:server-error ["Failed to save message!"]}}))))))}}]])
 
 
 
