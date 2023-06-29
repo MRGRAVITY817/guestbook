@@ -73,3 +73,15 @@ We need some way to convert EDN format into something else - like JSON. We use R
 ## Muuntaja
 
 _TODO: ADD NOTES_
+
+## Shadow-cljs
+
+A library that enables ClojureScript to Hot reload.  
+Much better alternative than `cljsbuild`.
+
+```bash
+# Build and auto-reload cljs
+$ npx shadow-cljs watch app
+# Shadow-cljs repl, you can try DOM stuffs
+$ npx shadow-cljs cljs-repl app
+```
