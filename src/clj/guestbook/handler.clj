@@ -6,6 +6,7 @@
    [guestbook.routes.home :refer [home-routes]]
    [guestbook.routes.services :refer [service-routes]]
    [reitit.ring :as ring]
+   [reitit.ring.middleware.dev :as dev]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.webjars :refer [wrap-webjars]]
    [mount.core :as mount]))
@@ -17,9 +18,14 @@
 (mount/defstate app-routes
   :start
   (ring/ring-handler
+
    (ring/router
     [(home-routes)
-     (service-routes)])
+     (service-routes)]
+      ;;Debug reitit middlewares (printed in console)
+      ;;This will not show other middlewares
+    {:reitit.middleware/transform dev/print-request-diffs})
+
    (ring/routes
     (ring/create-resource-handler
      {:path "/"})

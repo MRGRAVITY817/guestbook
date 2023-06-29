@@ -1,8 +1,7 @@
 (ns guestbook.messages
   (:require
    [guestbook.db.core :as db]
-   [guestbook.validation :refer [validate-message]]
-   [cljs.core :as c]))
+   [guestbook.validation :refer [validate-message]]))
 
 (defn message-list []
   {:messages (vec (db/get-messages))})
