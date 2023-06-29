@@ -44,34 +44,15 @@
    ;; API endpoints
    ["/messages"
     {:get
-     {:responses
-      {200
-       {:body ;; Data spec for response body
-        {:messages
-         [{:id        pos-int? ;; Predicates for swaggers
-           :name      string?
-           :message   string?
-           :timestamp inst?}]}}}}
+     {:responses {200 {:body {:messages [{:id pos-int?
+                                          :name string?
+                                          :message string?
+                                          :timestamp inst?}]}}}}
      :handler
-     (fn [_]
-       (response/ok (msg/message-list)))}]
+     (fn [_] (response/ok (msg/message-list)))}]
    ["/message"
     {:post
-     {:parameters
-      {:body ;; Data spec for request body parameters
-       {:name    string?
-        :message string?}}
-
-      :responses
-      {200
-       {:body map?}
-       400
-       {:body map?}
-       500
-       {:errors map?}}}
-
-     :handler
-     (fn [{{params :body} :parameters}]
+     (fn [{:keys [params]}]
        (try
          (msg/save-message! params)
          ;; Success

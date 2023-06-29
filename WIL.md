@@ -65,3 +65,11 @@ $ lein clean
 - `rf/dispatch`: Add event into event-queue
 - `rf/reg-sub`: Registers new subscription to an event
 - `rf/subscribe`: Get reactive-value from subscription
+
+## Coercion and Validation with Reitit
+
+We need some way to convert EDN format into something else - like JSON. We use Reitit for this part.
+
+## Muuntaja
+
+_TODO: ADD NOTES_
