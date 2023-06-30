@@ -22,9 +22,10 @@
    (ring/router
     [(home-routes)
      (service-routes)]
-      ;;Debug reitit middlewares (printed in console)
-      ;;This will not show other middlewares
-    {:reitit.middleware/transform dev/print-request-diffs})
+      ;; Debug reitit middlewares (printed in console)
+      ;; This will not show other middlewares
+      ;; {:reitit.middleware/transform dev/print-request-diffs}
+    )
 
    (ring/routes
     (ring/create-resource-handler
