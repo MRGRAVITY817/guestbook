@@ -28,6 +28,33 @@
    (-> db (assoc :messages/loading? false
                  :messages/list messages))))
 
+(rf/reg-event-db
+ :form/set-field
+ ;; Interceptors are simillar to middlewares
+ ;; It transforms the input and outputs of our event handlers.
+ ;; rf/path makes :form/fields to be entire db.
+ [(rf/path :form/fields)]
+ (fn [fields [_ id value]]
+   (assoc fields id value)))
+
+(rf/reg-event-db
+ :form/clear-fields
+ [((rf/path :form/fields))]
+ (fn [_ _] {}))
+
+(rf/reg-sub
+ :form/fields
+ (fn [db _]
+   (:form/fields db)))
+
+(rf/reg-sub
+ :form/field
+;; This :<- indicates that this is a 'derived subscription' 
+;; from :form/fields subscription.
+ :<- [:form/fields]
+ (fn [fields [_ id]]
+   (get fields id)))
+
 ;; Get messages
 
 (rf/reg-sub

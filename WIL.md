@@ -26,6 +26,9 @@ $ lein uberjar
 # Then run with java cli, using database url
 $ export DATABASE_URL="jdbc:h2:./guestbook_dev.db"
 $ java -jar target/uberjar/guestbook.jar
+
+# When providing dev config
+$ java -jar -Dconf=dev-config.edn target/uberjar/guestbook.jar
 ```
 
 ## Adding dev dependency
@@ -57,6 +60,11 @@ $ lein clean
 ## Reframe (Event Handler)
 
 - Enables event-driven data management with Regeant.
+- It has signal graph that contains 4 layers
+  - Layer 1, app-db: The source data in map format.
+  - Layer 2, extractors (direct subscription): Partial value extracted by keywords.
+  - Layer 3, computation (derived subscription): Computed value using extracted values.
+  - Layer 4, leaf views: The view function that renders computed value
 
 ### Features
 
