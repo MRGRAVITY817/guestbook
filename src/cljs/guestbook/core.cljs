@@ -11,7 +11,8 @@
 (rf/reg-event-fx
  :app/initialize
  (fn [_ _]
-   {:db {:messages/loading? true}}))
+   {:db {:messages/loading? true}
+    :dispatch [:messages/load]}))
 
 ;;
 ;; MESSAGES Layers
@@ -30,6 +31,53 @@
    (-> db (assoc :messages/loading? false
                  :messages/list messages))))
 
+;; Get messages
+(rf/reg-event-fx
+ :messages/load
+ (fn [{:keys [db]} _]
+   (GET "/api/messages"
+     {:headers {"Accept" "application/transit+json"}
+      :handler #(rf/dispatch [:messages/set (:messages %)])})
+   {:db (assoc db :messages/loading? true)}))
+
+(rf/reg-sub
+ :messages/list
+ (fn [db _]
+   (:messages/list db [])))
+
+;; Send message event
+(rf/reg-event-db
+ :messages/add
+ (fn [db [_ message]]
+   ;; Return db map where :messages/list has been 
+   ;; appended with new message at front (conjoined) .
+   (update db :messages/list conj message)))
+
+(rf/reg-event-fx
+ :message/send!
+ (fn [{:keys [db]} [_ fields]]
+   (POST "/api/message"
+     {:format :json
+      :headers {"Accept" "application/transit+json"
+                "x-csrf-token" (.-value (.getElementById js/document "token"))}
+      :params fields
+      :handler #(rf/dispatch
+                 [:messages/add
+                  (-> fields (assoc :timestamp (js/Date.)))])
+      :error-handler #(rf/dispatch
+                       [:form/set-server-errors
+                        (get-in % [:response :errors])])})
+   {:db (dissoc db :form/server-errors)}))
+
+(defn message-list [messages]
+  [:ul.messages
+   (for [{:keys [timestamp message name]} @messages]
+     ^{:key timestamp}
+     [:li
+      [:time (.toLocaleString timestamp)]
+      [:p message]
+      [:p " - " name]])])
+
 ;;
 ;; FORM Layers
 ;;
@@ -44,7 +92,7 @@
 
 (rf/reg-event-db
  :form/clear-fields
- [((rf/path :form/fields))]
+ [(rf/path :form/fields)]
  (fn [_ _] {}))
 
 (rf/reg-sub
@@ -73,7 +121,7 @@
 
 (rf/reg-sub
  :form/validation-errors
- :<- [:from/fields]
+ :<- [:form/fields]
  (fn [fields _]
    (validate-message fields)))
 
@@ -95,51 +143,6 @@
  :<- [:form/errors]
  (fn [errors [_ id]]
    (get errors id)))
-
-;; Get messages
-
-(rf/reg-sub
- :messages/list
- (fn [db _]
-   (:messages/list db [])))
-
-(defn get-messages []
-  (GET "/api/messages"
-    {:headers {"Accept" "application/transit+json"}
-     :handler #(rf/dispatch [:messages/set (:messages %)])}))
-
-;; Send message event
-(rf/reg-event-db
- :messages/add
- (fn [db [_ message]]
-   ;; Return db map where :messages/list has been 
-   ;; appended with new message at front (conjoined) .
-   (update db :messages/list conj message)))
-
-(rf/reg-event-fx
- :message/send!
- (fn [{:keys [db]} [fields]]
-   (POST "/api/message"
-     {:format :json
-      :headers {"Accept" "application/transit+json"
-                "x-csrf-token" (.-value (.getElementById js/document "token"))}
-      :params fields
-      :handler #(rf/dispatch
-                 [:messages/add
-                  (-> fields (assoc :timestamp (js/Date.)))])
-      :error-handler #(rf/dispatch
-                       [:form/set-server-errors
-                        (get-in % [:response :errors])])})
-   {:db (dissoc db :form/server-errors)}))
-
-(defn message-list [messages]
-  [:ul.messages
-   (for [{:keys [timestamp message name]} @messages]
-     ^{:key timestamp}
-     [:li
-      [:time (.toLocaleString timestamp)]
-      [:p message]
-      [:p " - " name]])])
 
 (defn errors-component [id]
   (when-let [error @(rf/subscribe [:form/error id])]
@@ -179,6 +182,15 @@
                               @(rf/subscribe [:form/fields])])
      :value "comment"}]])
 
+(defn reload-messages-button []
+  (let [loading? (rf/subscribe [:messages/loading?])]
+    [:button.button.is-info.is-fullwidth
+     {:on-click #(rf/dispatch [:messages/load])
+      :disabled @loading?}
+     (if @loading?
+       "Loading Messages"
+       "Refresh Messages")]))
+
 (defn home []
   (let [messages (rf/subscribe [:messages/list])] ;; Local state
     (fn []
@@ -190,6 +202,8 @@
            [:h3 "Messages"]
            [message-list messages]]
           [:div.columns>div.column
+           [reload-messages-button]]
+          [:div.columns>div.column
            [message-form]]])])))
 
 (defn ^:dev/after-load mount-components []
@@ -200,8 +214,7 @@
 
 (defn init! []
   (.log js/console "Initializing App...")
-  (rf/dispatch [:app/initialize]) ;; Put event in queue
-  (get-messages)
+  (rf/dispatch [:app/initialize])
   (mount-components))
 
 (dom/render

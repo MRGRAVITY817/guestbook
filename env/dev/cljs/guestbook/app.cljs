@@ -5,7 +5,7 @@
 
 (enable-console-print!)
 
-(println "loading evn/dev/cljs/guestbook/app.cljs...")
+(println "Loading evn/dev/cljs/guestbook/app.cljs...")
 
 (devtools/install!)
 
