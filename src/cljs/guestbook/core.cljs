@@ -14,6 +14,9 @@
  (fn [_ _]
    {:db {:messages/loading? true}}))
 
+;;
+;; MESSAGES Layers
+;;
 ;; Register subscription so that other function components can
 ;; subscribe to :messages/loading? event.
 (rf/reg-sub
@@ -28,6 +31,9 @@
    (-> db (assoc :messages/loading? false
                  :messages/list messages))))
 
+;;
+;; FORM Layers
+;;
 (rf/reg-event-db
  :form/set-field
  ;; Interceptors are simillar to middlewares
@@ -54,6 +60,42 @@
  :<- [:form/fields]
  (fn [fields [_ id]]
    (get fields id)))
+
+(rf/reg-event-db
+ :form/set-server-errors
+ [(rf/path :form/server-errors)]
+ (fn [_ [_ errors]]
+   errors))
+
+(rf/reg-sub
+ :form/server-errors
+ (fn [db _]
+   (:form/server-errors db)))
+
+(rf/reg-sub
+ :form/validation-errors
+ :<- [:from/fields]
+ (fn [fields _]
+   (validate-message fields)))
+
+(rf/reg-sub
+ :form/validation-errors?
+ :<- [:form/validation-errors]
+ (fn [errors _]
+   (seq errors)))
+
+(rf/reg-sub
+ :form/errors
+ :<- [:form/validation-errors]
+ :<- [:form/server-errors]
+ (fn [[validation server] _]
+   (merge validation server)))
+
+(rf/reg-sub
+ :form/error
+ :<- [:form/errors]
+ (fn [errors [_ id]]
+   (get errors id)))
 
 ;; Get messages
 

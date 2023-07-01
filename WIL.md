@@ -74,6 +74,25 @@ $ lein clean
 - `rf/reg-sub`: Registers new subscription to an event
 - `rf/subscribe`: Get reactive-value from subscription
 
+### How to use `reg-sub`
+
+```clojure
+(rf/reg-sub
+ :form/error                   ;; subscription key
+ :<- [:form/server-errors]     ;; dep-1
+ :<- [:form/validation-errors] ;; dep-2
+ (fn [[server-e validation-e]  ;; [dep-1 dep-2]
+      [_ id]]                  ;; fn arguement
+   (get (merge server-e validation-e) id))) ;; computed value
+```
+
+## Coercion and Validation with Reitit
+
+(fn [errors [_ id]]
+(get errors id)))
+
+````
+
 ## Coercion and Validation with Reitit
 
 We need some way to convert EDN format into something else - like JSON. We use Reitit for this part.
@@ -84,7 +103,7 @@ _TODO: ADD NOTES_
 
 ## Shadow-cljs
 
-A library that enables ClojureScript to Hot reload.  
+A library that enables ClojureScript to Hot reload.
 Much better alternative than `cljsbuild`.
 
 ```bash
@@ -92,4 +111,4 @@ Much better alternative than `cljsbuild`.
 $ npx shadow-cljs watch app
 # Shadow-cljs repl, you can try DOM stuffs
 $ npx shadow-cljs cljs-repl app
-```
+````
