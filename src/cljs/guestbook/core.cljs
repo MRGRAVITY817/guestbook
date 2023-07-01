@@ -1,6 +1,5 @@
 (ns guestbook.core
   (:require
-   [reagent.core :as r]
    [reagent.dom :as dom]
    [re-frame.core :as rf]
    [ajax.core :refer [GET POST]]
@@ -117,27 +116,21 @@
    ;; appended with new message at front (conjoined) .
    (update db :messages/list conj message)))
 
-;; Actual function to send message
-(defn send-message!
-  "Send form values to server (name and message)"
-  [fields errors]
-  (if-let [validation-errors (validate-message @fields)]
-    (reset! errors validation-errors)
-    (POST "/api/message"
-      {:format :json
-       :headers {;; Transit will auto convert Clojure data structures 
-                 ;; into HTML friendly string
-                 "Accept" "application/transit+json"
-                 "x-csrf-token" (.-value (.getElementById js/document "token"))}
-       :params @fields
-       :handler (fn [_]
-                  (rf/dispatch
-                   [:messages/add (assoc @fields :timestamp (js/Date.))])
-                  (reset! fields nil)
-                  (reset! errors nil))
-       :error-handler (fn [e]
-                        (.log js/console (str e))
-                        (reset! errors (-> e :response :errors)))})))
+(rf/reg-event-fx
+ :message/send!
+ (fn [{:keys [db]} [fields]]
+   (POST "/api/message"
+     {:format :json
+      :headers {"Accept" "application/transit+json"
+                "x-csrf-token" (.-value (.getElementById js/document "token"))}
+      :params fields
+      :handler #(rf/dispatch
+                 [:messages/add
+                  (-> fields (assoc :timestamp (js/Date.)))])
+      :error-handler #(rf/dispatch
+                       [:form/set-server-errors
+                        (get-in % [:response :errors])])})
+   {:db (dissoc db :form/server-errors)}))
 
 (defn message-list [messages]
   [:ul.messages
@@ -148,40 +141,43 @@
       [:p message]
       [:p " - " name]])])
 
-(defn errors-component [errors id]
-  (when-let [error (id @errors)]
+(defn errors-component [id]
+  (when-let [error @(rf/subscribe [:form/error id])]
     [:div.notification.is-danger (string/join error)]))
 
 (defn message-form []
-  (let [fields (r/atom {})
-        errors (r/atom nil)]
-    (fn []
-      [:div
-       [errors-component errors :server-error]
+  [:div
+   [errors-component :server-error]
        ;; Name Field
-       [:div.field
-        [:label.label {:for :name} "Name"]
-        [errors-component errors :name]
-        [:input.input
-         {:type :text
-          :name :name
-          :on-change #(swap! fields
-                             assoc :name (-> % .-target .-value))
-          :value (:name @fields)}]]
+   [:div.field
+    [:label.label {:for :name} "Name"]
+    [errors-component :name]
+    [:input.input
+     {:type :text
+      :name :name
+      :value @(rf/subscribe [:form/field :name])
+      :on-change #(rf/dispatch
+                   [:form/set-field
+                    :name
+                    (.. % -target -value)])}]]
        ;; Message Field
-       [:div.field
-        [:label.label {:for :message} "Message"]
-        [errors-component errors :message]
-        [:textarea.textarea
-         {:name :message
-          :value (:message @fields)
-          :on-change #(swap! fields
-                             assoc :message (-> % .-target .-value))}]]
+   [:div.field
+    [:label.label {:for :message} "Message"]
+    [errors-component :message]
+    [:textarea.textarea
+     {:name :message
+      :value @(rf/subscribe [:form/field :message])
+      :on-change #(rf/dispatch
+                   [:form/set-field
+                    :message
+                    (.. % -target -value)])}]]
        ;; Submit Button
-       [:input.button.is-primary
-        {:type :submit
-         :on-click #(send-message! fields errors)
-         :value "comment"}]])))
+   [:input.button.is-primary
+    {:type :submit
+     :disabled @(rf/subscribe [:form/validation-errors?])
+     :on-click #(rf/dispatch [:message/send!
+                              @(rf/subscribe [:form/fields])])
+     :value "comment"}]])
 
 (defn home []
   (let [messages (rf/subscribe [:messages/list])] ;; Local state
