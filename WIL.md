@@ -112,3 +112,11 @@ $ npx shadow-cljs watch app
 # Shadow-cljs repl, you can try DOM stuffs
 $ npx shadow-cljs cljs-repl app
 ````
+
+## Sente - Websocket library
+
+- `:ajax-post-fn`: The function that handles Ajax POST requests
+- `:ajax-get-or-ws-handshake-fn`: The function that negotiates the initial connection
+- `:ch-recv`: The receive channel for the socket
+- `:send-fn`: The function that’s used to send push notifications to the client
+- `:connected-uids`: An atom containing the IDs of the connected clients

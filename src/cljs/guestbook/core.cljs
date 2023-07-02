@@ -2,7 +2,7 @@
   (:require
    [reagent.dom :as dom]
    [re-frame.core :as rf]
-   [ajax.core :refer [GET POST]]
+   [ajax.core :refer [GET]]
    [clojure.string :as string]
    [guestbook.validation :refer [validate-message]]
    [guestbook.websockets :as ws]))

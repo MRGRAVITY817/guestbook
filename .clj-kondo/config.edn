@@ -1,3 +1,5 @@
 {:linters
- {:unresolved-symbol
+ {:unresolved-var
+  {:exclude [ajax.core]}
+  :unresolved-symbol
   {:exclude [(clojure.test.check.clojure-test [defstate])]}}}
