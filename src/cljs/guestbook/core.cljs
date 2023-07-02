@@ -4,70 +4,71 @@
    [re-frame.core :as rf]
    [ajax.core :refer [GET POST]]
    [clojure.string :as string]
-   [guestbook.validation :refer [validate-message]]))
+   [guestbook.validation :refer [validate-message]]
+   [guestbook.websockets :as ws]))
 
 ;; Register Reframe event, which contains info about 
 ;; whether messages are being loaded or not.
 (rf/reg-event-fx
  :app/initialize
  (fn [_ _]
-   {:db {:messages/loading? true}
-    :dispatch [:messages/load]}))
+   {:db {:message/loading? true}
+    :dispatch [:message/load]}))
 
 ;;
 ;; MESSAGES Layers
 ;;
 ;; Register subscription so that other function components can
-;; subscribe to :messages/loading? event.
+;; subscribe to :message/loading? event.
 (rf/reg-sub
- :messages/loading?
+ :message/loading?
  (fn [db _]
-   (:messages/loading? db)))
+   (:message/loading? db)))
 
 ;; Use reg-event-db for events that only use db effect.
 (rf/reg-event-db
- :messages/set
+ :message/set
  (fn [db [_ messages]]
-   (-> db (assoc :messages/loading? false
-                 :messages/list messages))))
+   (-> db (assoc :message/loading? false
+                 :message/list messages))))
 
 ;; Get messages
 (rf/reg-event-fx
- :messages/load
+ :message/load
  (fn [{:keys [db]} _]
    (GET "/api/messages"
      {:headers {"Accept" "application/transit+json"}
-      :handler #(rf/dispatch [:messages/set (:messages %)])})
-   {:db (assoc db :messages/loading? true)}))
+      :handler #(rf/dispatch [:message/set (:messages %)])})
+   {:db (assoc db :message/loading? true)}))
 
 (rf/reg-sub
- :messages/list
+ :message/list
  (fn [db _]
-   (:messages/list db [])))
+   (:message/list db [])))
 
 ;; Send message event
 (rf/reg-event-db
- :messages/add
+ :message/add
  (fn [db [_ message]]
-   ;; Return db map where :messages/list has been 
+   ;; Return db map where :message/list has been 
    ;; appended with new message at front (conjoined) .
-   (update db :messages/list conj message)))
+   (update db :message/list conj message)))
 
 (rf/reg-event-fx
  :message/send!
  (fn [{:keys [db]} [_ fields]]
-   (POST "/api/message"
-     {:format :json
-      :headers {"Accept" "application/transit+json"
-                "x-csrf-token" (.-value (.getElementById js/document "token"))}
-      :params fields
-      :handler #(rf/dispatch
-                 [:messages/add
-                  (-> fields (assoc :timestamp (js/Date.)))])
-      :error-handler #(rf/dispatch
-                       [:form/set-server-errors
-                        (get-in % [:response :errors])])})
+   (ws/send-message! fields)
    {:db (dissoc db :form/server-errors)}))
+
+(defn handle-response! [response]
+  (if-let [errors (:errors response)]
+    ;; If there's ws connection error, 
+    ;; push it as server error.
+    (rf/dispatch [:form/set-server-errors errors])
+    ;; If no errors, add incoming message in to displayed msg list.
+    (do
+      (rf/dispatch [:message/add response])
+      (rf/dispatch [:form/clear-fields response]))))
 
 (defn message-list [messages]
   [:ul.messages
@@ -183,19 +184,19 @@
      :value "comment"}]])
 
 (defn reload-messages-button []
-  (let [loading? (rf/subscribe [:messages/loading?])]
+  (let [loading? (rf/subscribe [:message/loading?])]
     [:button.button.is-info.is-fullwidth
-     {:on-click #(rf/dispatch [:messages/load])
+     {:on-click #(rf/dispatch [:message/load])
       :disabled @loading?}
      (if @loading?
        "Loading Messages"
        "Refresh Messages")]))
 
 (defn home []
-  (let [messages (rf/subscribe [:messages/list])] ;; Local state
+  (let [messages (rf/subscribe [:message/list])] ;; Local state
     (fn []
       [:div.content>div.columns.is-centered>div.column.is-two-thirds
-       (if @(rf/subscribe [:messages/loading?])
+       (if @(rf/subscribe [:message/loading?])
          [:h3 "Loading Messages..."]
          [:div
           [:div.columns>div.column
@@ -215,6 +216,8 @@
 (defn init! []
   (.log js/console "Initializing App...")
   (rf/dispatch [:app/initialize])
+  (ws/connect! (str "ws://" (.-host js/location) "/ws")
+               handle-response!)
   (mount-components))
 
 (dom/render
