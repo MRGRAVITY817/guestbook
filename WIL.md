@@ -122,3 +122,17 @@ $ npx shadow-cljs cljs-repl app
 - `:connected-uids`: An atom containing the IDs of the connected clients
 
 To get more info, visit [here](https://github.com/ptaoussanis/sente/wiki).
+
+## Using `mount` states between Clojure/ClojureScript
+
+```clojure
+(defstate socket ...)
+
+;; In Clojure, you can reference the keyword of socket directly
+( let [send-msg (:send-fn socket)] ...)
+
+;; In ClojureScript, you have to deref with @ first
+(let [send-fn (:send-fn @socket)] ...)
+```
+
+This difference comes from difference of Java/Javascript.

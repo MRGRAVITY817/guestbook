@@ -1,9 +1,9 @@
 (ns guestbook.routes.websockets
+  (:require-macros [mount.core :refer [defstate]])
   (:require [clojure.tools.logging :as log]
             [guestbook.messages :as msg]
             [guestbook.middleware :as middleware]
             [cljs.core :as c]
-            [mount.core :refer [defstate]]
             [taoensso.sente :as sente]
             [taoensso.sente.server-adapters.http-kit :refer [get-sch-adapter]]))
 
