@@ -120,3 +120,5 @@ $ npx shadow-cljs cljs-repl app
 - `:ch-recv`: The receive channel for the socket
 - `:send-fn`: The function that’s used to send push notifications to the client
 - `:connected-uids`: An atom containing the IDs of the connected clients
+
+To get more info, visit [here](https://github.com/ptaoussanis/sente/wiki).

@@ -1,6 +1,7 @@
 (ns guestbook.routes.websockets
   (:require [clojure.tools.logging :as log]
             [guestbook.messages :as msg]
+            [guestbook.middleware :as middleware]
             [cljs.core :as c]
             [mount.core :refer [defstate]]
             [taoensso.sente :as sente]
@@ -58,6 +59,28 @@
 (defn receive-message! [{:keys [id] :as message}]
   (log/debug "Got message with id: " id)
   (handle-message message))
+
+;; Setup message router, which handles incoming messages
+;; and pass to handler function.
+(defstate channel-router
+  :start (sente/start-chsk-router!
+        ;; `defstate` will automatically wait for 
+        ;; `socket` state to be initialized
+          (:ch-recv socket)
+          #'receive-message!)
+  :stop (when-let [stop-fn channel-router]
+          (stop-fn)))
+
+(defn websocket-routes []
+  ["/ws"
+   {;; Sente works well with ring middlewares,
+    ;; so we can add them here.
+    :middleware [middleware/wrap-csrf
+                 middleware/wrap-formats]
+    ;; If the client doesn't support websocket,
+    ;; Sente will automatically use AJAX post/get.
+    :get (:ajax-get-or-ws-handshake-fn socket)
+    :post (:ajax-post-fn socket)}])
 
 ;; Channel list should be in singleton SET data structure
 (defonce channels (atom #{}))
