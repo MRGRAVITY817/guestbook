@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [org.httpkit.server :as http-kit]
             [clojure.edn :as edn]
-            [guestbook.messages :as msg]))
+            [guestbook.messages :as msg]
+            [cljs.core :as c]))
 
 ;; Channel list should be in singleton SET data structure
 (defonce channels (atom #{}))
@@ -37,3 +38,15 @@
       ;; If no errors, broadcast message to all the channels.
       (doseq [channel @channels]
         (http-kit/send! channel (pr-str response))))))
+
+(defn handler [request]
+  (http-kit/with-channel request channel
+    (connect! channel)
+    (http-kit/on-close channel (partial disconnect! channel))
+    (http-kit/on-receive channel (partial handle-message! channel))))
+
+(defn websocket-routes []
+  ["/ws"
+   {:get handler}])
+
+

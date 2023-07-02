@@ -5,6 +5,7 @@
    [guestbook.layout :refer [error-page]]
    [guestbook.routes.home :refer [home-routes]]
    [guestbook.routes.services :refer [service-routes]]
+   [guestbook.routes.websockets :refer [websocket-routes]]
    [reitit.ring :as ring]
    [reitit.ring.middleware.dev :as dev]
    [ring.middleware.content-type :refer [wrap-content-type]]
@@ -21,7 +22,8 @@
 
    (ring/router
     [(home-routes)
-     (service-routes)]
+     (service-routes)
+     (websocket-routes)]
       ;; Debug reitit middlewares (printed in console)
       ;; This will not show other middlewares
       ;; {:reitit.middleware/transform dev/print-request-diffs}
@@ -34,11 +36,14 @@
      (wrap-webjars (constantly nil)))
     (ring/create-default-handler
      {:not-found
-      (constantly (error-page {:status 404, :title "404 - Page not found"}))
+      (constantly (error-page
+                   {:status 404, :title "404 - Page not found"}))
       :method-not-allowed
-      (constantly (error-page {:status 405, :title "405 - Not allowed"}))
+      (constantly (error-page
+                   {:status 405, :title "405 - Not allowed"}))
       :not-acceptable
-      (constantly (error-page {:status 406, :title "406 - Not acceptable"}))}))))
+      (constantly (error-page
+                   {:status 406, :title "406 - Not acceptable"}))}))))
 
 (defn app []
   (middleware/wrap-base #'app-routes))
