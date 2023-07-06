@@ -19,6 +19,14 @@
             "Couldn't send message, channel isn't open!"
             {:message (first args)}))))
 
+(rf/reg-fx
+ :ws/send!
+ (fn [{:keys [message timeout callback-event]
+       :or {timeout 30000}}]
+   (if callback-event
+     (send! message timeout #(rf/dispatch (conj callback-event %)))
+     (send! message))))
+
 ;; Message handlers 
 (defmulti handle-message (fn [{:keys [id]} _] id))
 
