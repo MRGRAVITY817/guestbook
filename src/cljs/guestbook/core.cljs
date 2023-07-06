@@ -1,5 +1,6 @@
 (ns guestbook.core
   (:require
+   [reagent.core :as r]
    [reagent.dom :as dom]
    [re-frame.core :as rf]
    [ajax.core :refer [GET]]
@@ -167,22 +168,32 @@
   (when-let [error @(rf/subscribe [:form/error id])]
     [:div.notification.is-danger (string/join error)]))
 
+(defn text-input [{val :value
+                   attrs :attrs
+                   :keys [on-save]}]
+  (let [draft (r/atom nil)
+        value (r/track #(or @draft @val ""))]
+    (fn []
+      [:input.input
+       (merge attrs {:type       :text
+                     :value      @value
+                     :on-change  #(reset! draft (.. % -target -value))
+                     :on-focus   #(reset! draft (or @val ""))
+                     :on-blur    (fn []
+                                   (on-save (or @draft ""))
+                                   (reset! draft nil))})])))
+
 (defn message-form []
   [:div
    [errors-component :server-error]
-       ;; Name Field
+
    [:div.field
     [:label.label {:for :name} "Name"]
     [errors-component :name]
-    [:input.input
-     {:type :text
-      :name :name
-      :value @(rf/subscribe [:form/field :name])
-      :on-change #(rf/dispatch
-                   [:form/set-field
-                    :name
-                    (.. % -target -value)])}]]
-       ;; Message Field
+    [text-input {:attrs {:name name}
+                 :value (rf/subscribe [:form/field :name])
+                 :on-save #(rf/dispatch [:form/set-field :name %])}]]
+
    [:div.field
     [:label.label {:for :message} "Message"]
     [errors-component :message]
@@ -193,7 +204,7 @@
                    [:form/set-field
                     :message
                     (.. % -target -value)])}]]
-       ;; Submit Button
+
    [:input.button.is-primary
     {:type :submit
      :disabled @(rf/subscribe [:form/validation-errors?])
