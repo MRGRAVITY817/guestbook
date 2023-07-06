@@ -12,12 +12,12 @@
           {:type           :auto ;; automatically choose betweeen ajax/ws
            :wrap-recv-evs? false})) ;; get structured client event.
 
-(defn send! [message]
+(defn send! [& args]
   (if-let [send-fn (:send-fn @socket)]
-    (send-fn message)
+    (apply send-fn args)
     (throw (ex-info
             "Couldn't send message, channel isn't open!"
-            {:message message}))))
+            {:message (first args)}))))
 
 ;; Message handlers 
 (defmulti handle-message (fn [{:keys [id]} _] id))
