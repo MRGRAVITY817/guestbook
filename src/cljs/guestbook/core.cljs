@@ -5,7 +5,6 @@
    [ajax.core :refer [GET]]
    [clojure.string :as string]
    [guestbook.validation :refer [validate-message]]
-   [guestbook.websockets :as ws]
    [mount.core :as mount]))
 
 ;; Register Reframe event, which contains info about 
@@ -14,11 +13,36 @@
  :app/initialize
  (fn [_ _]
    {:db {:message/loading? true}
-    :dispatch [:message/load]}))
+    :dispatch [:messages/load]}))
 
 ;;
 ;; MESSAGES Layers
 ;;
+(rf/reg-fx
+ :ajax/get
+ (fn [{:keys [url success-event error-event success-path]}]
+   (GET url
+     (cond-> {:headers {"Accept" "application/transit+json"}}
+       success-event
+       (assoc
+        :handler #(rf/dispatch
+                   (conj success-event
+                         (if success-path
+                           (get-in % success-path)
+                           %))))
+       error-event
+       (assoc
+        :error-handler #(rf/dispatch (conj error-event %)))))))
+
+;; Get messages
+(rf/reg-event-fx
+ :messages/load
+ (fn [{:keys [db]} _]
+   {:db (assoc db :message/loading? true)
+    :ajax/get {:url "/api/messages"
+               :success-path [:messages]
+               :success-event [:message/set]}}))
+
 ;; Register subscription so that other function components can
 ;; subscribe to :message/loading? event.
 (rf/reg-sub
@@ -32,15 +56,6 @@
  (fn [db [_ messages]]
    (-> db (assoc :message/loading? false
                  :message/list messages))))
-
-;; Get messages
-(rf/reg-event-fx
- :message/load
- (fn [{:keys [db]} _]
-   (GET "/api/messages"
-     {:headers {"Accept" "application/transit+json"}
-      :handler #(rf/dispatch [:message/set (:messages %)])})
-   {:db (assoc db :message/loading? true)}))
 
 (rf/reg-sub
  :message/list
@@ -72,16 +87,6 @@
     :ws/send! {:message [:message/create! fields]
                :timeout 10000
                :callback-event [:message/send!-called-back]}}))
-
-(defn handle-response! [response]
-  (if-let [errors (:errors response)]
-    ;; If there's ws connection error, 
-    ;; push it as server error.
-    (rf/dispatch [:form/set-server-errors errors])
-    ;; If no errors, add incoming message in to displayed msg list.
-    (do
-      (rf/dispatch [:message/add response])
-      (rf/dispatch [:form/clear-fields response]))))
 
 (defn message-list [messages]
   [:ul.messages
@@ -199,7 +204,7 @@
 (defn reload-messages-button []
   (let [loading? (rf/subscribe [:message/loading?])]
     [:button.button.is-info.is-fullwidth
-     {:on-click #(rf/dispatch [:message/load])
+     {:on-click #(rf/dispatch [:messages/load])
       :disabled @loading?}
      (if @loading?
        "Loading Messages"
