@@ -1,16 +1,16 @@
 (ns guestbook.routes.websockets
-  (:require-macros [mount.core :refer [defstate]])
   (:require [clojure.tools.logging :as log]
             [guestbook.messages :as msg]
             [guestbook.middleware :as middleware]
             [cljs.core :as c]
+            [mount.core :refer [defstate]]
             [taoensso.sente :as sente]
             [taoensso.sente.server-adapters.http-kit :refer [get-sch-adapter]]))
 
 ;; Create websocket app state
 (defstate socket
   ;; Initialize Sente ws connection on app start
-  :start (sente/make-channel-socket-client!
+  :start (sente/make-channel-socket!
           ;; with http-kit server adapter
           (get-sch-adapter)
           ;; Sente will automatically allocate unique id for 
@@ -93,14 +93,5 @@
   (log/info "Channel closed: " status)
   (swap! channels disj channel))
 
-(defn handler [request]
-  (http-kit/with-channel request channel
-    (connect! channel)
-    (http-kit/on-close channel (partial disconnect! channel))
-    (http-kit/on-receive channel (partial handle-message! channel))))
-
-(defn websocket-routes []
-  ["/ws"
-   {:get handler}])
 
 

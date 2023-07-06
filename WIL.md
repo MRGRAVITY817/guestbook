@@ -115,6 +115,8 @@ $ npx shadow-cljs cljs-repl app
 
 ## Sente - Websocket library
 
+Gives a smooth transition between AJAX/Websocket
+
 - `:ajax-post-fn`: The function that handles Ajax POST requests
 - `:ajax-get-or-ws-handshake-fn`: The function that negotiates the initial connection
 - `:ch-recv`: The receive channel for the socket
