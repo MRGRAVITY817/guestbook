@@ -1,7 +1,6 @@
 /target
 /lib
-/classes
-/checkouts
+/classes /checkouts
 pom.xml
 dev-config.edn
 test-config.edn
@@ -17,3 +16,4 @@ profiles.clj
 /.clj-kondo/.cache
 /.lsp
 /.shadow-cljs
+/data
