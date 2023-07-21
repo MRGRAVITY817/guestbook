@@ -10,6 +10,7 @@
                  [com.taoensso/sente "1.16.0"]
                  [org.clojure/google-closure-library "0.0-20191016-6ae1f72f" :scope "provided"]
                  [thheller/shadow-cljs "2.11.14" :scope "provided"]
+                 [buddy "2.0.0"]
                  [conman "0.9.1"]
                  [cprop "0.1.17"]
                  [expound "0.8.7"]
