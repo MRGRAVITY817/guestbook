@@ -10,8 +10,6 @@
    [mount.core :as mount])
   (:gen-class))
 
-;; Clojh
-
 ;; log uncaught exceptions in threads
 (Thread/setDefaultUncaughtExceptionHandler
  (reify Thread$UncaughtExceptionHandler
