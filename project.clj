@@ -6,7 +6,6 @@
   :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
                  [cheshire "5.10.0"]
                  [clojure.java-time "0.3.2"]
-                 [com.h2database/h2 "1.4.200"]
                  [com.google.javascript/closure-compiler-unshaded "v20200830" :scope "provided"]
                  [com.taoensso/sente "1.16.0"]
                  [org.clojure/google-closure-library "0.0-20191016-6ae1f72f" :scope "provided"]
