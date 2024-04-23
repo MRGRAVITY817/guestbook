@@ -1,5 +1,6 @@
 (ns guestbook.routes.services
   (:require
+   [guestbook.auth :as auth]
    [guestbook.messages :as msg]
    [guestbook.middleware.formats :as formats]
    [ring.util.http-response :as response]
@@ -11,6 +12,8 @@
    [reitit.ring.middleware.exception :as exception]
    [reitit.ring.middleware.multipart :as multipart]
    [reitit.ring.middleware.parameters :as parameters]))
+
+(declare login-service)
 
 (defn service-routes []
   ["/api"
@@ -62,12 +65,9 @@
         :message string?}}
 
       :responses
-      {200
-       {:body map?}
-       400
-       {:body map?}
-       500
-       {:errors map?}}
+      {200 {:body map?}
+       400 {:body map?}
+       500 {:errors map?}}
 
       :handler
       (fn [{{params :body} :parameters}]
@@ -84,9 +84,27 @@
                 (response/bad-request {:errors errors})
                ;; else
                 (response/internal-server-error
-                 {:errors {:server-error ["Failed to save message!"]}}))))))}}]])
+                 {:errors {:server-error ["Failed to save message!"]}}))))))}}]
+   ["/login" login-service]])
 
-
+(def login-service
+  {:post
+   {:parameters
+    {:body
+     {:login string?
+      :password string?}}
+    :responses
+    {200
+     {:body {:identity {:login string? :created_at inst?}}}
+     401
+     {:body {:message string?}}}
+    :handler
+    (fn [{{{:keys [login password]} :body} :parameters
+          session              :session}]
+      (if-some [user (auth/authenticate-user login password)]
+        ((-> response/ok {:identify user})
+         (assoc :session (assoc session :identity user)))
+        (response/unauthorized {:message "Incorrect login or password."})))}})
 
 
 

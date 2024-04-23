@@ -2,4 +2,4 @@
  {:unresolved-var
   {:exclude [ajax.core]}
   :unresolved-symbol
-  {:exclude [(clojure.test.check.clojure-test [defstate])]}}}
+  {:exclude [(clojure.test.check.clojure-test [defstate])]}} :lint-as {mount.core/defstate clj-kondo.lint-as/def-catch-all}}
